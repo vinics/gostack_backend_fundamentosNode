@@ -26,23 +26,29 @@ class TransactionsRepository {
   }
 
   public getBalance(): Balance {
-    const balance = {
-      income: 0,
-      outcome: 0,
-      total: 0,
-    };
+    const { income, outcome } = this.transactions.reduce(
+      (acc: Omit<Balance, 'total'>, cur: Transaction) => {
+        switch (cur.type) {
+          case 'income':
+            acc.income += cur.value;
+            break;
+          case 'outcome':
+            acc.outcome += cur.value;
+            break;
+          default:
+            break;
+        }
+        return acc;
+      },
+      {
+        income: 0,
+        outcome: 0,
+      },
+    );
 
-    this.transactions.forEach(transaction => {
-      if (transaction.type === 'income') {
-        balance.income += transaction.value;
-      } else {
-        balance.outcome += transaction.value;
-      }
-    });
+    const total = income - outcome;
 
-    balance.total = balance.income - balance.outcome;
-
-    return balance;
+    return { income, outcome, total };
   }
 
   public create({ title, value, type }: TransactionDTO): Transaction {
